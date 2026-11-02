@@ -139,7 +139,13 @@ func parseQuantity(s string) (*big.Rat, error) {
 	}
 	switch suffix := m[2]; {
 	case suffix == "":
-	case suffix[0] == 'e' || suffix[0] == 'E':
+	case quantitySuffixes[suffix] != nil:
+		// SI suffix (n, u, m, k, M, G, T, P, E, Ki..Ei). Checked before the
+		// exponent branch so that "E" (Exa) and "Ei" (Exbi) — which start with
+		// 'E' — are not mistaken for a decimal exponent.
+		value.Mul(value, quantitySuffixes[suffix])
+	default:
+		// Decimal exponent form (e3, E-2); the regexp guarantees digits follow.
 		exp, err := strconv.Atoi(suffix[1:])
 		if err != nil || exp > 64 || exp < -64 {
 			return nil, errors.New("exponent out of range")
@@ -149,8 +155,6 @@ func parseQuantity(s string) (*big.Rat, error) {
 			pow.Inv(pow)
 		}
 		value.Mul(value, pow)
-	default:
-		value.Mul(value, quantitySuffixes[suffix])
 	}
 	return value, nil
 }

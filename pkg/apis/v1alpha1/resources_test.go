@@ -131,6 +131,10 @@ func TestParseMemoryBytes(t *testing.T) {
 		{"500M", 500_000_000, false},
 		{"1u", 1, false}, // ceiling to 1 byte
 		{"0Gi", 0, true},
+		{"1E", 1_000_000_000_000_000_000, false}, // Exa (10^18) SI suffix
+		{"2E", 2_000_000_000_000_000_000, false}, // Exa, non-unit mantissa
+		{"1Ei", 1 << 60, false},                  // Exbi (2^60) binary SI suffix
+		{"1e3", 1000, false},                     // decimal exponent still works
 	}
 	for _, tt := range tests {
 		got, err := v1alpha1.ParseMemoryBytes(tt.input)
